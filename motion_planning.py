@@ -5,7 +5,7 @@ from enum import Enum, auto
 
 import numpy as np
 
-from planning_utils import a_star, heuristic, create_grid
+from planning_utils import a_star, iterative_astar, heuristic, heuristic_new, a_star_traverse, create_grid
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -124,13 +124,13 @@ class MotionPlanning(Drone):
         # TODO: set home position to (lon0, lat0, 0)
 
         # TODO: retrieve current global position
- 
+
         # TODO: convert to current local position using global_to_local()
         
         print('global home {0}, position {1}, local position {2}'.format(self.global_home, self.global_position,
-                                                                         self.local_position))
+                                                                        self.local_position))
         # Read in obstacle map
-        data = np.loadtxt('colliders.csv', delimiter=',', dtype='Float64', skiprows=2)
+        data = np.loadtxt('colliders.csv', delimiter=',', dtype='float64', skiprows=2)
         
         # Define a grid for a particular altitude and safety margin around obstacles
         grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
@@ -140,16 +140,35 @@ class MotionPlanning(Drone):
         # TODO: convert start position to current position rather than map center
         
         # Set goal as some arbitrary position on the grid
-        grid_goal = (-north_offset + 10, -east_offset + 10)
+        grid_goal = (-north_offset + 60, -east_offset + 50)
         # TODO: adapt to set goal as latitude / longitude position and convert
 
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation
         # or move to a different search space such as a graph (not done here)
         print('Local Start and Goal: ', grid_start, grid_goal)
-        path, _ = a_star(grid, heuristic, grid_start, grid_goal)
+
+        # path, _ = a_star(grid, heuristic, grid_start, grid_goal)
+
+        # Question 2
+        # path, _ = iterative_astar(grid, heuristic, grid_start, grid_goal)
+
+        # Question 3
+        # path, _ = a_star(grid, heuristic_new, grid_start, grid_goal)
+        path, _ = iterative_astar(grid, heuristic_new, grid_start, grid_goal)
+
+        # Question 4
+        # traverse_points = [
+        #     (-north_offset + 15, -east_offset + 5),
+        #     (-north_offset + 25, -east_offset + 10),
+        #     (-north_offset + 45, -east_offset + 30)
+        # ]
+        # path, _ = a_star_traverse(grid, heuristic, traverse_points, grid_start, grid_goal)
+
         # TODO: prune path to minimize number of waypoints
         # TODO (if you're feeling ambitious): Try a different approach altogether!
+
+        print('\npath', path ,'\n')
 
         # Convert path to waypoints
         waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
